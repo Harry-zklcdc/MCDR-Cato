@@ -1,0 +1,11 @@
+{
+  "id": "cato",
+  "version": "1.0.0",
+  "name": "Cato Plugin",
+  "description": "Plugin Cato",
+  "author": ["Harry-zklcdc", "猫猫"],
+  "link": "https://github.com/Harry-zklcdc/MCDR-Cato",
+  "dependencies": {
+		"mcdreforged": ">=2.0.0-alpha.1"
+	}
+}
