@@ -3,7 +3,6 @@ from mcdreforged.api.all import *
 from subprocess import Popen, PIPE, STDOUT
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import traceback
-import base64
 import urllib
 import socket
 import time
@@ -40,14 +39,7 @@ class HttpHandler(BaseHTTPRequestHandler):
             elif path == '/id':
                 rtv = str(id)
             elif path == '/code':
-                data = {
-                    'v': '1.0.c',
-                    'id': str(id),
-                    'n': config['name'],
-                    'p': 50000
-                }
-                LinkCode = str(base64.b64encode(str(json.dumps(data)).encode('utf-8')), encoding = 'utf-8')
-                rtv = LinkCode
+                rtv = str(id) + '#' + str(50000)
             else:
                 code = 404
                 rtv = '404'
@@ -68,30 +60,31 @@ class HttpHandler(BaseHTTPRequestHandler):
 def StartCato(server, Token, Port):
     global proc, config
     GetID = False
-    command = 'plugins/cato -token ' + str(Token) + ' -allows 127.0.0.1:26666/127.0.0.1:50000/127.0.0.1:' + str(Port)
+    command = 'plugins/cato -token ' + str(Token)
     proc = Popen(command, stdin=PIPE, stdout=PIPE, stderr=STDOUT, shell=True)
     MonitorCato(server, Token, Port)
     try:
         for line in iter(proc.stdout.readline, b''):
             output = str(line, encoding='utf-8')
             msg = output.split('\"')
-            if re.match('Initialization complete: id', msg[3]) and not GetID:
-                global id
-                id = msg[3].split('(')[1].split(')')[0].split(':')[0]
-                data = {
-                    'v': '1.0.c',
-                    'id': str(id),
-                    'n': config['name'],
-                    'p': 50000
-                }
-                GetID = True
-                server.logger.info('Cato Start!')
-                server.logger.info('Link ID: ' + str(id))
-                server.logger.info('Link Code: ' + str(base64.b64encode(str(json.dumps(data)).encode("utf-8")), encoding = "utf-8"))
-            if re.match('Connection request from peer id', msg[3]):
-                server.logger.info('ID: ' + str(msg[3].split('(')[1].split(')')[0]) + ' try to connect. IP:' + str(msg[3].split('(')[2].split(')')[0]))
-    except Exception:
+            if len(msg) > 3:
+                if re.match('Initialization complete: id', msg[3]) and not GetID:
+                    global id
+                    id = msg[3].split('(')[1].split(')')[0].split(':')[0]
+                    GetID = True
+                    server.logger.info('Cato Start!')
+                    server.logger.info('Link ID: ' + str(id))
+                    server.logger.info('Link Code: ' + str(id) + '#' + str(50000))
+                    proc.stdin.write(str('ufw net open 127.0.0.1:26666\n').encode("utf-8"))
+                    proc.stdin.write(str('ufw net open 127.0.0.1:50000\n').encode("utf-8"))
+                    proc.stdin.write(str('ufw net open 127.0.0.1:' + str(Port) + '\n').encode("utf-8"))
+                if re.match('Reconnecting to main net try', msg[3]):
+                    GetID = False
+                if re.match('Connection request from peer id', msg[3]):
+                    server.logger.info('ID: ' + str(msg[3].split('(')[1].split(')')[0]) + ' try to connect. IP:' + str(msg[3].split('(')[2].split(')')[0]))
+    except Exception as e:
         server.logger.error('Cato Start Error')
+        server.logger.error(traceback.print_exc())
         proc.kill()
         StartCato(server, Token, Port)
 
@@ -123,12 +116,21 @@ def StartMultiplayerServer(server):
 
 @new_thread
 def HandleClient(server, client):
+    global config
     msg = str(client.recv(256), encoding='utf-8')
     if 'handshake' in msg:
-        client.send(b'{"type":"handshake"}\r\n')
+        data = {
+            'type': 'handshake'
+        }
+        client.send(str(json.dumps(data) + '\r\n').encode("utf-8"))
         server.logger.info('Handshake')
     if 'join' in msg:
-        client.send(str('{"port":' + str(server.get_server_information().port) + ',"type":"join"}\r\n').encode("utf-8"))
+        data = {
+            'sessionName': config['name'],
+            'port': config['port'],
+            'type': 'join'
+        }
+        client.send(str(json.dumps(data) + '\r\n').encode("utf-8"))
         server.logger.info('Accept Request')
     while True:
         try:
@@ -163,13 +165,7 @@ def GetID(source: CommandSource):
 
 def GetCode(source: CommandSource):
     global id, config
-    data = {
-        'v': '1.0.c',
-        'id': str(id),
-        'n': config['name'],
-        'p': 50000
-    }
-    code = str(base64.b64encode(str(json.dumps(data)).encode('utf-8')), encoding = 'utf-8')
+    code = str(id) + '#' + str(50000)
     source.reply(RText('Link code: ', RColor.red) + RText(code, RColor.gold).h('联机码').c(action=RAction.copy_to_clipboard, value=code))
 
 
@@ -191,15 +187,9 @@ def ChangeToken(source: CommandSource, token):
 def on_server_startup(server: ServerInterface):
     global id, config
     StartMultiplayerServer(server)
-    data = {
-        'v': '1.0.c',
-        'id': str(id),
-        'n': config['name'],
-        'p': 50000
-    }
     server.logger.info('API is listenning in: http://127.0.0.1:26666')
     server.logger.info('Link ID: ' + str(id))
-    server.logger.info('Link Code: ' + str(base64.b64encode(str(json.dumps(data)).encode("utf-8")), encoding = "utf-8"))
+    server.logger.info('Link Code: ' + str(id) + '#' + str(50000))
 
 
 def on_load(server: PluginServerInterface, prev_module):
