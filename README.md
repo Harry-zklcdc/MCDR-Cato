@@ -4,7 +4,7 @@
 
 使服务器启动时, 自动使用 `cato` 进行端口映射, 并支持生成 `HMCL` 联机码
 
-Cato 的介绍可以看[这里](https://noin.cn/71.html)
+Cato 的介绍可以看[这里](http://101.43.107.234/setup.html)
 
 # 简单介绍
 
@@ -41,7 +41,7 @@ Cato 的介绍可以看[这里](https://noin.cn/71.html)
 
 1. 下载插件后, 放至 [`MCDR`](https://github.com/Fallen-Breath/MCDReforged) 的 `plugins` 文件夹
 
-2. 下载适合你系统版本的 Cato 本体, 放至 [`MCDR`](https://github.com/Fallen-Breath/MCDReforged) 的 `plugins` 文件夹, 下载地址在[这里](https://noin.cn/71.html)
+2. 下载适合你系统版本的 Cato 本体, 放至 [`MCDR`](https://github.com/Fallen-Breath/MCDReforged) 的 `plugins` 文件夹, 下载地址在[这里](https://github.com/unxu/cato/tree/master/client)
 
 3. 启动服务器
 
@@ -61,7 +61,7 @@ Cato 的介绍可以看[这里](https://noin.cn/71.html)
 | -------------------- | ------------------------------------------------------------ |
 | !!cato id            | 查看 Cato 连接 ID                                            |
 | !!cato code          | 查看 HMCL 联机码                                             |
-| !!cato token <token> | <token> 可以填静态 Token（需要到[这里](https://noin.cn/)申请）, 也可以填 `new`, 即为临时 ID |
+<!--| !!cato token <token> | <token> 可以填静态 Token（需要到[这里](https://noin.cn/)申请）, 也可以填 `new`, 即为临时 ID |-->
 
 ### ※PS: 临时 ID 有效期为三个小时, 三个小时需获取新的临时 ID, 本插件支持自动重启 Cato 以获取新的临时 ID
 
